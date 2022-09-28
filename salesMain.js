@@ -54,6 +54,67 @@ const getItemSelectedFromDatabase = (itemName) => {
     });
 };
 
+const addItemToCart = (itemName) => {
+    let productFound = getItemSelectedFromDatabase(itemName);
+    let allCalculatedTaxAmounts;
+    if (appState.cart[productFound.name]) {
+        // ANOTHER ITEM
+        allCalculatedTaxAmounts = calculateTaxesOfItem(productFound);
+        updateExistingItemObject(productFound, allCalculatedTaxAmounts)
+    } else {
+        // NEW ITEM
+        allCalculatedTaxAmounts = calculateTaxesOfItem(productFound);
+        createNewItemObject(productFound, allCalculatedTaxAmounts);
+    }
+    alert(`${itemName} has been added to cart`);
+};
+
+// CREATE/UPDATE ITEM OBJECT METHODS:
+const updateExistingItemObject = (item, allCalculatedTaxAmounts) => {
+    let itemInCart = appState.cart[item.name];
+    let newItemQuantity = itemInCart.quantity + 1;
+    let newTotalPrice = itemInCart.totalPrice + convertFromCurrency(item.price);
+    let newPriceAfterTax = (parseFloat(itemInCart.totalPriceAfterTax) + allCalculatedTaxAmounts.priceTotalAfterTax).toFixed(2);
+    let accruedImportTax = (parseFloat(itemInCart.accruedImportTax) + allCalculatedTaxAmounts.importTax).toFixed(2);
+    let accruedSalesTax = (parseFloat(itemInCart.accruedSalesTax) + allCalculatedTaxAmounts.salesTax).toFixed(2);
+    let accruedOverallTax = (parseFloat(itemInCart.accruedOverallTax) + allCalculatedTaxAmounts.addedTax).toFixed(2);
+
+    itemInCart.quantity = newItemQuantity;
+    itemInCart.totalPrice = newTotalPrice;
+    itemInCart.totalPriceAfterTax = newPriceAfterTax;
+    itemInCart.accruedImportTax = accruedImportTax;
+    itemInCart.accruedSalesTax = accruedSalesTax;
+    itemInCart.accruedOverallTax = accruedOverallTax;
+};
+
+const createNewItemObject = (item, allCalculatedTaxAmounts) => {
+    const itemPrice = convertFromCurrency(item.price);
+    let newItem = {
+        itemName: item.name,
+        itemRetailPrice: itemPrice,
+        accruedOverallTax: allCalculatedTaxAmounts.addedTax,
+        addedTax: allCalculatedTaxAmounts.addedTax,
+        importTax: allCalculatedTaxAmounts.importTax,
+        salesTax: allCalculatedTaxAmounts.salesTax,
+        accruedImportTax: allCalculatedTaxAmounts.importTax,
+        accruedSalesTax: allCalculatedTaxAmounts.salesTax,
+        totalPrice: itemPrice,
+        totalPriceAfterTax: allCalculatedTaxAmounts.priceTotalAfterTax,
+        isImport: item.import,
+        type: item.type,
+        quantity: 1
+    };
+    appState.cart[item.name] = newItem;
+};
+
+const setTotal = (newValue) => {
+    appState.total = newValue;
+};
+
+const setTotalTax = (newValue) => {
+    appState.totalTax = newValue;
+};
+
 //converts string format to number format of product price:
 const convertFromCurrency = (numberInStringForm) => {
     let newNumber;
@@ -143,6 +204,36 @@ const calculateTaxesOfItem = (productToTax) => {
         priceTotalAfterTax: itemPriceAfterAllTaxes
     };
 }
+
+// EVENT LISTENERS:
+document.addEventListener('click', (event) => {
+    if(event.target.id.includes('purchaseItem')) {
+        let itemName = event.target.parentElement.children[0].textContent;
+        addItemToCart(itemName)
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if(event.target.id === 'checkOut') {
+        // This is where the calculations need to happen.
+        setTotalTax(calculateTaxesForAllPurchasedItems());
+        setTotal(calculateTotalPrice());
+        document.getElementById("receipt").innerHTML = renderReceipt();
+        appState.cart = {};
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if(event.target.id === 'removeAllItemsBtn') {
+        removeAllItemsFromCart();
+    }
+});
+
+document.addEventListener('click', (event) => {
+    if(event.target.id === 'clearReceiptBtn') {
+        document.getElementById("receipt").innerHTML = '';
+    }
+});
 
 //method returns html representation of store products:
 const renderPage = () => {
