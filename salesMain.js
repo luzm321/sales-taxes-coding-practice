@@ -26,10 +26,16 @@ let products = [
         "import": true
     },
     {
-        "name": "Pokemon Plushie",
-        "type": "Merchandise",
+        "name": "The Pragmatic Programmer",
+        "type": "Book",
         "price": "25$",
         "import": true
+    },
+    {
+        "name": "Stethoscope",
+        "type": "Medical",
+        "price": "100$",
+        "import": false
     },
     {
         "name": "Playstation 5",
@@ -52,6 +58,12 @@ const getItemSelectedFromDatabase = (itemName) => {
             return product;
         }
     });
+};
+
+// ADD/REMOVE ITEMS FROM CART METHODS:
+const removeAllItemsFromCart = () => {
+    alert(`All items have been removed from your cart Items Removed: ${Object.keys(appState.cart)}`);
+    appState.cart = {};
 };
 
 const addItemToCart = (itemName) => {
@@ -235,6 +247,29 @@ document.addEventListener('click', (event) => {
     }
 });
 
+// RENDER METHODS:
+const renderReceipt = () => {
+    return `
+        ${
+        Object.keys(appState.cart).map((item) => {
+            return `
+                        <p>${appState.cart[item].itemName} at ${appState.cart[item].itemRetailPrice}$</p>
+                        ${
+                            Object.keys(appState.cart).length > 1 ? `<p>${appState.cart[item].totalPriceAfterTax}$</p>` : ''
+                        }
+                        ${
+                            appState.cart[item].quantity > 1 ? `<p>(${appState.cart[item].quantity} @ ${appState.cart[item].itemRetailPrice}$)</p>` : ''
+                        }
+                    `
+        }).join("")
+    }
+        <label for="totalTax">Sales Taxes:</label>
+        <p id="totalTax">${appState.totalTax}$</p>
+        <label for="totalPrice">Total:</label>
+        <p id="totalPrice">${appState.total}$</p>
+    `
+};
+
 //method returns html representation of store products:
 const renderPage = () => {
     return `
@@ -254,7 +289,8 @@ const renderPage = () => {
         }
     <button id="checkOut">CheckOut</button>
     <br/>
-    <label for="receipt">Receipt</label>
+    <br/>
+    <label for="receipt">Receipt:</label>
     <p id="receipt"></id>
    `
 }
