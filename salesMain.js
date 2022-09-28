@@ -68,7 +68,27 @@ const convertFromCurrency = (numberInStringForm) => {
     return newNumber;
 };
 
+const calculateTotalPrice = () => {
+    let itemsArray = Object.values(appState.cart);
+    let total = 0;
+    itemsArray.forEach((item) => {
+        //? Need parseFloat as parseInt will only parse the leading part of the string that defines a whole number.
+        //? Reference: https://stackoverflow.com/questions/28894971/problems-with-javascript-parseint-decimal-string
+        total += parseFloat(item.totalPriceAfterTax);
+    });
+    return total;
+}
+
 //TAX CALCULATION METHODS:
+const calculateTaxesForAllPurchasedItems = () => {
+    let itemsArray = Object.values(appState.cart);
+    let totalTaxes = 0;
+    itemsArray.forEach((item) => {
+        totalTaxes += parseFloat(item.accruedOverallTax);
+    });
+    return totalTaxes;
+};
+
 const calculateImportTax = (product) => {
     let totalPriceAfterImportTax = 0;
     let importTax = 0;
